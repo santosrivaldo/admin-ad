@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ad-admin-web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=your-super-secret-jwt-key-change-this
+      - LDAP_URL=ldap://your-domain-controller:389
+      - LDAP_BIND_DN=admin@yourdomain.com
+      - LDAP_BIND_PASSWORD=your-ldap-password
+      - LDAP_BASE_DN=DC=yourdomain,DC=com
+    volumes:
+      - ./audit-logs.json:/app/audit-logs.json
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - ad-admin-network
+
+  # Opcional: Adicionar um banco de dados para logs mais robustos
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=ad_admin
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ad-admin-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  ad-admin-network:
+    driver: bridge
